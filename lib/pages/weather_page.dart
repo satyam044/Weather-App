@@ -11,6 +11,7 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
+  final TextEditingController InputController = TextEditingController();
   final _weatherService = WeatherServices('ApiKey');
   Weather? _weather;
 
@@ -60,23 +61,66 @@ class _WeatherPageState extends State<WeatherPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Lottie.asset(getWeatherAnimation(_weather?.mainCondition)),
-                Text(
-                  "${_weather?.temperature.round()}°C",
-                  style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
-                ),
-                Text(_weather?.mainCondition ?? "", style: TextStyle(fontSize: 40, fontWeight: FontWeight.normal),),
-                Text(_weather?.cityName ?? "loading city...", style: TextStyle(fontSize: 50, fontWeight: FontWeight.w300),),
-                SizedBox(height: 60,),
-                Lottie.asset("assets/Home.json"),
-              ],
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: InputController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: "Search City",
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.search),
+                        onPressed: () async {
+                          String cityName = InputController.text.trim();
+                          if (cityName.isEmpty) return;
+                          try {
+                            final weather = await _weatherService.getWeather(
+                              cityName,
+                            );
+                            setState(() {
+                              _weather = weather;
+                            });
+                          } catch (e) {
+                            print("Error: $e");
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Lottie.asset(
+                    getWeatherAnimation(_weather?.mainCondition),
+                    height: 200,
+                  ),
+                  Text(
+                    "${_weather?.temperature.round()}°C",
+                    style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _weather?.mainCondition ?? "",
+                    style: TextStyle(fontSize: 40),
+                  ),
+                  Text(
+                    _weather?.cityName ?? "loading city...",
+                    style: TextStyle(fontSize: 50, fontWeight: FontWeight.w300),
+                  ),
+                  SizedBox(height: 60),
+                  Lottie.asset("assets/Home.json"),
+                ],
+              ),
             ),
           ),
         ),
